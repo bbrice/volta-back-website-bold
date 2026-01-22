@@ -728,18 +728,18 @@
 
             const userPrompt = `Voici ma situation de flotte : ${input}`;
 
-            // Merge systemPrompt and userPrompt into a single finalPrompt
-            const finalPrompt = `${systemPrompt}\n\n${userPrompt}`;
+            // Merge systemPrompt and userPrompt into a single finalText (two newlines between them)
+            const finalText = `${systemPrompt}\n\n${userPrompt}`;
 
             // Helper function to make API call with a specific model
             async function callGeminiAPI(modelName) {
-                const url = `https://generativelanguage.googleapis.com/v1/models/${modelName}:generateContent?key=${apiKey}`;
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
                 console.log('Debug URL:', url.replace(apiKey, 'HIDDEN'));
                 
-                // Simplified payload without systemInstruction
+                // Simple JSON payload without systemInstruction
                 const payload = {
                     contents: [{
-                        parts: [{ text: finalPrompt }]
+                        parts: [{ text: finalText }]
                     }]
                 };
                 
