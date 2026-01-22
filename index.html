@@ -728,21 +728,18 @@
 
             const userPrompt = `Voici ma situation de flotte : ${input}`;
 
-            // Merge systemPrompt and userPrompt into a single finalText (two newlines between them)
-            const finalText = `${systemPrompt}\n\n${userPrompt}`;
+            // Concatenate systemPrompt and userPrompt into fullText
+            const fullText = `${systemPrompt}\n\n${userPrompt}`;
 
-            // Helper function to make API call with a specific model
-            async function callGeminiAPI(modelName) {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
-                console.log('Debug URL:', url.replace(apiKey, 'HIDDEN'));
-                
-                // Simple JSON payload without systemInstruction
-                const payload = {
-                    contents: [{
-                        parts: [{ text: finalText }]
-                    }]
-                };
-                
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+
+            const payload = {
+                contents: [{
+                    parts: [{ text: fullText }]
+                }]
+            };
+
+            try {
                 const response = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -752,32 +749,8 @@
                 const data = await response.json();
                 
                 if (data.error) throw new Error(data.error.message);
-                
-                return data.candidates[0].content.parts[0].text;
-            }
 
-            try {
-                let aiText;
-                let modelUsed;
-                
-                // Try gemini-1.5-flash first
-                try {
-                    aiText = await callGeminiAPI('gemini-1.5-flash');
-                    modelUsed = 'gemini-1.5-flash';
-                    console.log('Model succeeded: gemini-1.5-flash');
-                } catch (firstError) {
-                    console.warn('gemini-1.5-flash failed, trying fallback gemini-pro:', firstError);
-                    
-                    // Fallback to gemini-pro
-                    try {
-                        aiText = await callGeminiAPI('gemini-pro');
-                        modelUsed = 'gemini-pro';
-                        console.log('Model succeeded: gemini-pro');
-                    } catch (fallbackError) {
-                        console.error('Both models failed:', fallbackError);
-                        throw fallbackError;
-                    }
-                }
+                const aiText = data.candidates[0].content.parts[0].text;
                 
                 // Convert Markdown to HTML
                 content.innerHTML = marked.parse(aiText);
