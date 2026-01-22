@@ -702,77 +702,101 @@
         initializeApiKeyFromUrl();
         
         async function analyzeFleet() {
-            // 1. Récupération UI
             const inputField = document.getElementById('fleet-input');
             const btn = document.getElementById('analyze-btn'); 
             const content = document.getElementById('result-content');
             const placeholder = document.getElementById('result-placeholder');
             const loading = document.getElementById('result-loading');
             
-            // 2. Clé API
             const apiKey = getApiKey();
             if (!apiKey) return;
 
-            // 3. Validation Entrée
             if (!inputField || !inputField.value.trim()) {
                 alert("Veuillez décrire votre flotte.");
                 return;
             }
             const userText = inputField.value;
 
-            // 4. UI Loading
+            // UI Loading
             btn.disabled = true;
             btn.classList.add('opacity-50', 'cursor-not-allowed');
             if (placeholder) placeholder.classList.add('hidden');
             if (loading) loading.classList.remove('hidden');
             if (content) content.classList.add('hidden');
 
-            // 5. PROMPT UNIQUE
-            const systemPrompt = `Tu es un expert en stratégie de flotte automobile. Analyse cette situation et vends la solution VoltaBack (remboursement domicile). Structure en Markdown avec des titres clairs.`;
+            // PRÉPARATION DU TEXTE (Stratégie Bulldozer - Pas de format complexe)
+            const systemPrompt = `Tu es un expert en stratégie de flotte automobile. Analyse cette situation et vends la solution VoltaBack (remboursement domicile). Structure en Markdown.`;
             const fullText = systemPrompt + "\n\nSituation:\n" + userText;
+            
+            // LISTE DES MODÈLES À TESTER (L'un après l'autre)
+            const modelsToTry = [
+                'gemini-1.5-flash',      // Le standard actuel
+                'gemini-1.5-pro',        // Le plus puissant
+                'gemini-1.0-pro'         // Le "vieux" (renommé)
+            ];
 
-            // 6. URL NUCLÉAIRE (LE CHANGEMENT EST ICI)
-            // On passe sur 'v1beta' ET sur le modèle 'gemini-pro' (le plus compatible)
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
+            let success = false;
+            let lastError = "";
 
-            const payload = {
-                contents: [{ parts: [{ text: fullText }] }]
-            };
+            // BOUCLE DE TENTATIVES
+            for (const model of modelsToTry) {
+                try {
+                    console.log(`Tentative avec le modèle : ${model}...`);
+                    
+                    // On utilise v1beta qui est la route la plus compatible
+                    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+                    
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: fullText }] }]
+                        })
+                    });
 
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
+                    const data = await response.json();
 
-                const data = await response.json();
-                
-                if (data.error) throw new Error(data.error.message);
-                if (!data.candidates) throw new Error("Pas de réponse de l'IA");
+                    if (data.error) {
+                        // Si erreur API, on throw pour passer au modèle suivant
+                        throw new Error(data.error.message);
+                    }
+                    
+                    if (!data.candidates || !data.candidates[0].content) {
+                        throw new Error("Réponse vide de l'IA");
+                    }
 
-                const aiText = data.candidates[0].content.parts[0].text;
-                
-                // Affichage
-                if (content) {
-                    content.innerHTML = marked.parse(aiText);
-                    content.classList.remove('hidden');
+                    // SUCCÈS !
+                    const aiText = data.candidates[0].content.parts[0].text;
+                    if (content) {
+                        content.innerHTML = marked.parse(aiText);
+                        content.classList.remove('hidden');
+                    }
+                    console.log(`SUCCÈS avec ${model} !`);
+                    success = true;
+                    break; // On sort de la boucle, on a gagné
+
+                } catch (error) {
+                    console.warn(`Échec avec ${model}:`, error.message);
+                    lastError = error.message;
+                    // On continue vers le prochain modèle de la liste
                 }
+            }
 
-            } catch (error) {
-                console.error("Erreur:", error);
+            // GESTION D'ERREUR FINALE (Si les 3 ont échoué)
+            if (!success) {
                 if (content) {
                     content.innerHTML = `<div class="text-red-400 p-4 border border-red-800 rounded bg-red-900/20">
-                        <strong>Erreur :</strong> ${error.message} <br>
-                        <span class="text-xs text-gray-400">Si l'erreur persiste, vérifiez vos quotas sur Google AI Studio.</span>
+                        <strong>Échec total :</strong> Aucun modèle n'a répondu.<br>
+                        <small>Dernière erreur : ${lastError}</small>
                     </div>`;
                     content.classList.remove('hidden');
                 }
-            } finally {
-                if (loading) loading.classList.add('hidden');
-                btn.disabled = false;
-                btn.classList.remove('opacity-50', 'cursor-not-allowed');
             }
+
+            // RESET UI
+            if (loading) loading.classList.add('hidden');
+            btn.disabled = false;
+            btn.classList.remove('opacity-50', 'cursor-not-allowed');
         }
     </script>
 </body>
