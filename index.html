@@ -724,8 +724,6 @@
             loading.classList.remove('hidden');
             content.classList.add('hidden');
 
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-001:generateContent?key=${apiKey}`;
-
             const systemPrompt = "Tu es un consultant expert en gestion de flotte et transition énergétique (Fleet Manager). L'utilisateur va décrire sa flotte actuelle. Tu dois analyser la situation et expliquer pourquoi une solution logicielle de remboursement de recharge à domicile (comme VoltaBack) est supérieure à l'installation de bornes physiques ou à l'usage exclusif de cartes publiques. Réponds en Markdown. Structure la réponse avec ces titres précis : '### Analyse', '### Potentiel d'Économie', '### Recommandation'. Sois concis, impactant et professionnel (style 'Apple Business').";
 
             const userPrompt = `Voici ma situation de flotte : ${input}`;
@@ -739,8 +737,11 @@
                 }
             };
 
-            try {
+            // Helper function to make API call with a specific model
+            async function callGeminiAPI(modelName) {
+                const url = `https://generativelanguage.googleapis.com/v1/models/${modelName}:generateContent?key=${apiKey}`;
                 console.log('Debug URL:', url.replace(apiKey, 'HIDDEN'));
+                
                 const response = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -750,8 +751,32 @@
                 const data = await response.json();
                 
                 if (data.error) throw new Error(data.error.message);
+                
+                return data.candidates[0].content.parts[0].text;
+            }
 
-                const aiText = data.candidates[0].content.parts[0].text;
+            try {
+                let aiText;
+                let modelUsed;
+                
+                // Try gemini-1.5-flash first
+                try {
+                    aiText = await callGeminiAPI('gemini-1.5-flash');
+                    modelUsed = 'gemini-1.5-flash';
+                    console.log('Model succeeded: gemini-1.5-flash');
+                } catch (firstError) {
+                    console.warn('gemini-1.5-flash failed, trying fallback gemini-pro:', firstError);
+                    
+                    // Fallback to gemini-pro
+                    try {
+                        aiText = await callGeminiAPI('gemini-pro');
+                        modelUsed = 'gemini-pro';
+                        console.log('Model succeeded: gemini-pro');
+                    } catch (fallbackError) {
+                        console.error('Both models failed:', fallbackError);
+                        throw fallbackError;
+                    }
+                }
                 
                 // Convert Markdown to HTML
                 content.innerHTML = marked.parse(aiText);
