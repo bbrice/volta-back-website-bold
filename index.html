@@ -702,43 +702,38 @@
         initializeApiKeyFromUrl();
         
         async function analyzeFleet() {
-            // 1. Récupération des VRAIS éléments de ton HTML
+            // 1. Récupération UI
             const inputField = document.getElementById('fleet-input');
             const btn = document.getElementById('analyze-btn'); 
             const content = document.getElementById('result-content');
-            const placeholder = document.getElementById('result-placeholder'); // Pour cacher l'image d'attente
+            const placeholder = document.getElementById('result-placeholder');
             const loading = document.getElementById('result-loading');
             
-            // 2. Vérification Clé API
+            // 2. Clé API
             const apiKey = getApiKey();
             if (!apiKey) return;
 
-            // 3. Récupération du texte utilisateur
+            // 3. Validation Entrée
             if (!inputField || !inputField.value.trim()) {
                 alert("Veuillez décrire votre flotte.");
                 return;
             }
             const userText = inputField.value;
 
-            // 4. Gestion UI
+            // 4. UI Loading
             btn.disabled = true;
             btn.classList.add('opacity-50', 'cursor-not-allowed');
-            
-            // Masquer le placeholder et afficher le loading
             if (placeholder) placeholder.classList.add('hidden');
             if (loading) loading.classList.remove('hidden');
             if (content) content.classList.add('hidden');
 
-            // 5. STRATÉGIE BULLDOZER (Adaptée à ton champ unique)
-            const systemPrompt = `Tu es un expert en stratégie de flotte automobile (TCO, Transition Énergétique). 
-            Analyse la situation décrite par l'utilisateur et explique les gains d'une solution de remboursement à domicile (VoltaBack).
-            Sois structuré (Markdown), direct et vendeur.`;
-            
-            // On fusionne System + User pour éviter les erreurs API
-            const fullText = systemPrompt + "\n\n---\n\nSituation de la flotte :\n" + userText;
+            // 5. PROMPT UNIQUE (Stratégie Bulldozer)
+            const systemPrompt = `Tu es un expert en stratégie de flotte automobile. Analyse cette situation et vends la solution VoltaBack (remboursement domicile). Structure en Markdown avec des titres clairs.`;
+            const fullText = systemPrompt + "\n\nSituation:\n" + userText;
 
-            // 6. Appel API (v1beta + flash + simple JSON)
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+            // 6. URL STABLE (v1) - C'est ici que ça se joue
+            // On utilise v1 (pas beta) car c'est là que vit gemini-1.5-flash officiellement
+            const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
             const payload = {
                 contents: [{ parts: [{ text: fullText }] }]
@@ -754,9 +749,8 @@
                 const data = await response.json();
                 
                 if (data.error) throw new Error(data.error.message);
+                if (!data.candidates) throw new Error("Pas de réponse de l'IA");
 
-                // Extraction
-                if (!data.candidates || !data.candidates[0].content) throw new Error("Pas de réponse");
                 const aiText = data.candidates[0].content.parts[0].text;
                 
                 // Affichage
@@ -764,18 +758,18 @@
                     content.innerHTML = marked.parse(aiText);
                     content.classList.remove('hidden');
                 }
-                if (loading) loading.classList.add('hidden');
 
             } catch (error) {
-                console.error("Gemini Error:", error);
+                console.error("Erreur:", error);
                 if (content) {
                     content.innerHTML = `<div class="text-red-400 p-4 border border-red-800 rounded bg-red-900/20">
-                        <strong>Erreur :</strong> ${error.message}
+                        <strong>Erreur :</strong> ${error.message} <br>
+                        <span class="text-xs text-gray-400">Vérifiez que votre clé API est active sur Google AI Studio.</span>
                     </div>`;
                     content.classList.remove('hidden');
                 }
-                if (loading) loading.classList.add('hidden');
             } finally {
+                if (loading) loading.classList.add('hidden');
                 btn.disabled = false;
                 btn.classList.remove('opacity-50', 'cursor-not-allowed');
             }
