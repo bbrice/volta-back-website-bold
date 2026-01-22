@@ -702,41 +702,46 @@
         initializeApiKeyFromUrl();
         
         async function analyzeFleet() {
-            const input = document.getElementById('fleet-input').value;
-            if (!input.trim()) return;
-
-            // Get API key from localStorage or prompt user
+            // 1. Récupération des VRAIS éléments de ton HTML
+            const inputField = document.getElementById('fleet-input');
+            const btn = document.getElementById('analyze-btn'); 
+            const content = document.getElementById('result-content');
+            const placeholder = document.getElementById('result-placeholder'); // Pour cacher l'image d'attente
+            const loading = document.getElementById('result-loading');
+            
+            // 2. Vérification Clé API
             const apiKey = getApiKey();
-            if (!apiKey) {
-                alert('Une clé API est requise pour utiliser cette fonctionnalité.');
+            if (!apiKey) return;
+
+            // 3. Récupération du texte utilisateur
+            if (!inputField || !inputField.value.trim()) {
+                alert("Veuillez décrire votre flotte.");
                 return;
             }
+            const userText = inputField.value;
 
-            // UI States
-            const btn = document.getElementById('analyze-btn');
-            const placeholder = document.getElementById('result-placeholder');
-            const loading = document.getElementById('result-loading');
-            const content = document.getElementById('result-content');
-
+            // 4. Gestion UI
             btn.disabled = true;
             btn.classList.add('opacity-50', 'cursor-not-allowed');
-            placeholder.classList.add('hidden');
-            loading.classList.remove('hidden');
-            content.classList.add('hidden');
+            
+            // Masquer le placeholder et afficher le loading
+            if (placeholder) placeholder.classList.add('hidden');
+            if (loading) loading.classList.remove('hidden');
+            if (content) content.classList.add('hidden');
 
-            const systemPrompt = "Tu es un consultant expert en gestion de flotte et transition énergétique (Fleet Manager). L'utilisateur va décrire sa flotte actuelle. Tu dois analyser la situation et expliquer pourquoi une solution logicielle de remboursement de recharge à domicile (comme VoltaBack) est supérieure à l'installation de bornes physiques ou à l'usage exclusif de cartes publiques. Réponds en Markdown. Structure la réponse avec ces titres précis : '### Analyse', '### Potentiel d'Économie', '### Recommandation'. Sois concis, impactant et professionnel (style 'Apple Business').";
+            // 5. STRATÉGIE BULLDOZER (Adaptée à ton champ unique)
+            const systemPrompt = `Tu es un expert en stratégie de flotte automobile (TCO, Transition Énergétique). 
+            Analyse la situation décrite par l'utilisateur et explique les gains d'une solution de remboursement à domicile (VoltaBack).
+            Sois structuré (Markdown), direct et vendeur.`;
+            
+            // On fusionne System + User pour éviter les erreurs API
+            const fullText = systemPrompt + "\n\n---\n\nSituation de la flotte :\n" + userText;
 
-            const userPrompt = `Voici ma situation de flotte : ${input}`;
-
-            // Concatenate systemPrompt and userPrompt into fullText
-            const fullText = `${systemPrompt}\n\n${userPrompt}`;
-
+            // 6. Appel API (v1beta + flash + simple JSON)
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
             const payload = {
-                contents: [{
-                    parts: [{ text: fullText }]
-                }]
+                contents: [{ parts: [{ text: fullText }] }]
             };
 
             try {
@@ -750,20 +755,26 @@
                 
                 if (data.error) throw new Error(data.error.message);
 
+                // Extraction
+                if (!data.candidates || !data.candidates[0].content) throw new Error("Pas de réponse");
                 const aiText = data.candidates[0].content.parts[0].text;
                 
-                // Convert Markdown to HTML
-                content.innerHTML = marked.parse(aiText);
-                
-                // Show result
-                loading.classList.add('hidden');
-                content.classList.remove('hidden');
+                // Affichage
+                if (content) {
+                    content.innerHTML = marked.parse(aiText);
+                    content.classList.remove('hidden');
+                }
+                if (loading) loading.classList.add('hidden');
 
             } catch (error) {
                 console.error("Gemini Error:", error);
-                content.innerHTML = `<p class="text-red-400">Une erreur est survenue lors de l'analyse. Veuillez réessayer.</p>`;
-                loading.classList.add('hidden');
-                content.classList.remove('hidden');
+                if (content) {
+                    content.innerHTML = `<div class="text-red-400 p-4 border border-red-800 rounded bg-red-900/20">
+                        <strong>Erreur :</strong> ${error.message}
+                    </div>`;
+                    content.classList.remove('hidden');
+                }
+                if (loading) loading.classList.add('hidden');
             } finally {
                 btn.disabled = false;
                 btn.classList.remove('opacity-50', 'cursor-not-allowed');
