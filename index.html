@@ -702,101 +702,89 @@
         initializeApiKeyFromUrl();
         
         async function analyzeFleet() {
-            const inputField = document.getElementById('fleet-input');
-            const btn = document.getElementById('analyze-btn'); 
-            const content = document.getElementById('result-content');
-            const placeholder = document.getElementById('result-placeholder');
-            const loading = document.getElementById('result-loading');
-            
+            // --- 1. CONFIG UI ---
+            const elements = {
+                input: document.getElementById('fleet-input'),
+                btn: document.getElementById('analyze-btn'),
+                content: document.getElementById('result-content'),
+                placeholder: document.getElementById('result-placeholder'),
+                loading: document.getElementById('result-loading')
+            };
+
+            if (!elements.input || !elements.btn) {
+                console.error("Erreur critique HTML"); return;
+            }
+
+            // --- 2. AUTH ---
             const apiKey = getApiKey();
             if (!apiKey) return;
-
-            if (!inputField || !inputField.value.trim()) {
-                alert("Veuillez décrire votre flotte.");
-                return;
-            }
-            const userText = inputField.value;
-
-            // UI Loading
-            btn.disabled = true;
-            btn.classList.add('opacity-50', 'cursor-not-allowed');
-            if (placeholder) placeholder.classList.add('hidden');
-            if (loading) loading.classList.remove('hidden');
-            if (content) content.classList.add('hidden');
-
-            // PRÉPARATION DU TEXTE (Stratégie Bulldozer - Pas de format complexe)
-            const systemPrompt = `Tu es un expert en stratégie de flotte automobile. Analyse cette situation et vends la solution VoltaBack (remboursement domicile). Structure en Markdown.`;
-            const fullText = systemPrompt + "\n\nSituation:\n" + userText;
             
-            // LISTE DES MODÈLES À TESTER (L'un après l'autre)
-            const modelsToTry = [
-                'gemini-1.5-flash',      // Le standard actuel
-                'gemini-1.5-pro',        // Le plus puissant
-                'gemini-1.0-pro'         // Le "vieux" (renommé)
-            ];
-
-            let success = false;
-            let lastError = "";
-
-            // BOUCLE DE TENTATIVES
-            for (const model of modelsToTry) {
-                try {
-                    console.log(`Tentative avec le modèle : ${model}...`);
-                    
-                    // On utilise v1beta qui est la route la plus compatible
-                    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-                    
-                    const response = await fetch(url, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            contents: [{ parts: [{ text: fullText }] }]
-                        })
-                    });
-
-                    const data = await response.json();
-
-                    if (data.error) {
-                        // Si erreur API, on throw pour passer au modèle suivant
-                        throw new Error(data.error.message);
-                    }
-                    
-                    if (!data.candidates || !data.candidates[0].content) {
-                        throw new Error("Réponse vide de l'IA");
-                    }
-
-                    // SUCCÈS !
-                    const aiText = data.candidates[0].content.parts[0].text;
-                    if (content) {
-                        content.innerHTML = marked.parse(aiText);
-                        content.classList.remove('hidden');
-                    }
-                    console.log(`SUCCÈS avec ${model} !`);
-                    success = true;
-                    break; // On sort de la boucle, on a gagné
-
-                } catch (error) {
-                    console.warn(`Échec avec ${model}:`, error.message);
-                    lastError = error.message;
-                    // On continue vers le prochain modèle de la liste
-                }
+            if (!elements.input.value.trim()) {
+                alert("Décrivez votre flotte."); return;
             }
 
-            // GESTION D'ERREUR FINALE (Si les 3 ont échoué)
-            if (!success) {
-                if (content) {
-                    content.innerHTML = `<div class="text-red-400 p-4 border border-red-800 rounded bg-red-900/20">
-                        <strong>Échec total :</strong> Aucun modèle n'a répondu.<br>
-                        <small>Dernière erreur : ${lastError}</small>
+            // --- 3. LOADING ---
+            elements.btn.disabled = true;
+            elements.btn.classList.add('opacity-50', 'cursor-not-allowed');
+            if (elements.placeholder) elements.placeholder.classList.add('hidden');
+            if (elements.loading) elements.loading.classList.remove('hidden');
+            if (elements.content) elements.content.classList.add('hidden');
+
+            try {
+                // --- 4. DÉTECTION DU MODÈLE (La clé du succès) ---
+                console.log("🔍 Test des modèles disponibles...");
+                // On utilise v1beta qui est la seule porte d'entrée fiable
+                const discoveryUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
+                
+                const discoveryResponse = await fetch(discoveryUrl);
+                const discoveryData = await discoveryResponse.json();
+
+                if (discoveryData.error) throw new Error(discoveryData.error.message);
+
+                // On prend le premier modèle "Flash" ou "Pro" qui est actif
+                const model = discoveryData.models?.find(m => 
+                    m.supportedGenerationMethods.includes('generateContent') &&
+                    (m.name.includes('flash') || m.name.includes('pro'))
+                );
+
+                if (!model) throw new Error("Aucun modèle IA trouvé. Vérifiez AI Studio.");
+                console.log(`✅ Modèle activé : ${model.name}`);
+
+                // --- 5. APPEL IA ---
+                const systemPrompt = "Tu es un expert en gestion de flotte (TCO, verdissement). Analyse cette flotte et argumente pour la solution VoltaBack (remboursement domicile). Fais une réponse structurée en Markdown.";
+                const fullText = systemPrompt + "\n\nDonnées Client:\n" + elements.input.value;
+
+                const generateUrl = `https://generativelanguage.googleapis.com/v1beta/${model.name}:generateContent?key=${apiKey}`;
+
+                const response = await fetch(generateUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: fullText }] }] })
+                });
+
+                const data = await response.json();
+                if (data.error) throw new Error(data.error.message);
+
+                // --- 6. SUCCÈS ---
+                const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (elements.content && aiText) {
+                    elements.content.innerHTML = marked.parse(aiText);
+                    elements.content.classList.remove('hidden');
+                }
+
+            } catch (error) {
+                console.error("Erreur:", error);
+                if (elements.content) {
+                    elements.content.innerHTML = `<div class="p-4 bg-red-900/50 border border-red-500 rounded text-white">
+                        <strong>Erreur :</strong> ${error.message}
                     </div>`;
-                    content.classList.remove('hidden');
+                    elements.content.classList.remove('hidden');
                 }
+            } finally {
+                if (elements.loading) elements.loading.classList.add('hidden');
+                elements.btn.disabled = false;
+                elements.btn.classList.remove('opacity-50', 'cursor-not-allowed');
             }
-
-            // RESET UI
-            if (loading) loading.classList.add('hidden');
-            btn.disabled = false;
-            btn.classList.remove('opacity-50', 'cursor-not-allowed');
         }
     </script>
 </body>
