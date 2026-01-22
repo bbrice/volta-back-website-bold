@@ -727,13 +727,13 @@
             if (loading) loading.classList.remove('hidden');
             if (content) content.classList.add('hidden');
 
-            // 5. PROMPT UNIQUE (Stratégie Bulldozer)
+            // 5. PROMPT UNIQUE
             const systemPrompt = `Tu es un expert en stratégie de flotte automobile. Analyse cette situation et vends la solution VoltaBack (remboursement domicile). Structure en Markdown avec des titres clairs.`;
             const fullText = systemPrompt + "\n\nSituation:\n" + userText;
 
-            // 6. URL STABLE (v1) - C'est ici que ça se joue
-            // On utilise v1 (pas beta) car c'est là que vit gemini-1.5-flash officiellement
-            const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+            // 6. URL NUCLÉAIRE (LE CHANGEMENT EST ICI)
+            // On passe sur 'v1beta' ET sur le modèle 'gemini-pro' (le plus compatible)
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
 
             const payload = {
                 contents: [{ parts: [{ text: fullText }] }]
@@ -764,7 +764,7 @@
                 if (content) {
                     content.innerHTML = `<div class="text-red-400 p-4 border border-red-800 rounded bg-red-900/20">
                         <strong>Erreur :</strong> ${error.message} <br>
-                        <span class="text-xs text-gray-400">Vérifiez que votre clé API est active sur Google AI Studio.</span>
+                        <span class="text-xs text-gray-400">Si l'erreur persiste, vérifiez vos quotas sur Google AI Studio.</span>
                     </div>`;
                     content.classList.remove('hidden');
                 }
