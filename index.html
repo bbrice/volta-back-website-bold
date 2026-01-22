@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoltaBack | L'énergie. Réinventée.</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <!-- Markdown parser for AI response -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #000000;
+            color: #f5f5f7;
+            overflow-x: hidden;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #000; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #333; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555; 
+        }
+
+        .glass-nav {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .text-gradient {
+            background: linear-gradient(to right, #ffffff, #888888);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .text-gradient-green {
+            background: linear-gradient(to right, #4ade80, #22c55e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .bento-card {
+            background: #111111;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .bento-card:hover {
+            transform: scale(1.02);
+            border-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+
+        /* Glow effect on hover */
+        .bento-card::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255, 255, 255, 0.08), transparent 40%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        .bento-card:hover::after {
+            opacity: 1;
+        }
+
+        .hero-title {
+            letter-spacing: -0.05em;
+            line-height: 1.1;
+        }
+
+        .cta-button {
+            background: #fff;
+            color: #000;
+            transition: all 0.3s ease;
+        }
+        .cta-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        }
+
+        .grid-bg {
+            background-size: 40px 40px;
+            background-image: linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+            mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
+        }
+        
+        /* AI Section Specifics */
+        .ai-input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            transition: all 0.3s ease;
+        }
+        .ai-input:focus {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: #4ade80;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.2);
+        }
+        .ai-result h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #fff;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+        .ai-result h3:first-child {
+            margin-top: 0;
+        }
+        .ai-result p {
+            margin-bottom: 1rem;
+            color: #d1d5db;
+        }
+        .ai-result ul {
+            list-style-type: disc;
+            padding-left: 1.5rem;
+            margin-bottom: 1rem;
+            color: #d1d5db;
+        }
+        .ai-result li {
+            margin-bottom: 0.5rem;
+        }
+        
+        @keyframes pulse-green {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .animate-pulse-green {
+            animation: pulse-green 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        /* --- UPDATED SEQUENCE ANIMATIONS --- */
+        /* Total cycle: 6s */
+        
+        /* LEFT SIDE (Car to VB) */
+        @keyframes seq-line-left {
+            0% { width: 0; opacity: 0.5; } /* Start */
+            10% { width: 100%; opacity: 1; } /* Connected */
+            90% { width: 100%; opacity: 1; } /* Stay connected */
+            100% { width: 100%; opacity: 0; } /* Reset */
+        }
+
+        @keyframes seq-check-left {
+            0%, 12% { opacity: 0; transform: translate(-50%, 0) scale(0.5); }
+            18%, 90% { opacity: 1; transform: translate(-50%, -28px) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -28px) scale(1); }
+        }
+
+        /* RIGHT SIDE (Linky to VB) - Starts at 3s (50% of 6s cycle) */
+        @keyframes seq-line-right {
+            0%, 45% { width: 0; opacity: 0; } /* Wait */
+            55% { width: 100%; opacity: 1; } /* Connect */
+            90% { width: 100%; opacity: 1; } /* Stay */
+            100% { width: 100%; opacity: 0; } /* Reset */
+        }
+
+        @keyframes seq-check-right {
+            0%, 57% { opacity: 0; transform: translate(-50%, 0) scale(0.5); }
+            63%, 90% { opacity: 1; transform: translate(-50%, -28px) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -28px) scale(1); }
+        }
+
+        /* Center Pulse Success */
+        @keyframes center-pulse-success {
+            0%, 60% { box-shadow: 0 0 0 rgba(74, 222, 128, 0); border-color: rgba(74, 222, 128, 0.3); }
+            70%, 90% { box-shadow: 0 0 40px rgba(74, 222, 128, 0.4); border-color: rgba(74, 222, 128, 1); }
+            100% { box-shadow: 0 0 0 rgba(74, 222, 128, 0); border-color: rgba(74, 222, 128, 0.3); }
+        }
+
+        .anim-line-left { animation: seq-line-left 6s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+        .anim-check-left { animation: seq-check-left 6s cubic-bezier(0.34, 1.56, 0.64, 1) infinite; }
+        
+        .anim-line-right { animation: seq-line-right 6s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+        .anim-check-right { animation: seq-check-right 6s cubic-bezier(0.34, 1.56, 0.64, 1) infinite; }
+        
+        .anim-center-pulse { animation: center-pulse-success 6s ease-in-out infinite; }
+        
+        /* Graph Bar Animation */
+        @keyframes grow-bar {
+            from { height: 0; opacity: 0; }
+            to { opacity: 1; }
+        }
+        .bar-anim {
+            animation: grow-bar 1s ease-out forwards;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 glass-nav py-4">
+        <div class="max-w-7xl mx-auto px-6 flex justify-between items-center">
+            <a href="#" class="text-xl font-bold tracking-tighter flex items-center gap-2">
+                <i data-lucide="zap" class="w-5 h-5 text-green-400 fill-current"></i>
+                VOLTABACK
+            </a>
+            <div class="hidden md:flex space-x-8 text-sm font-medium text-gray-300">
+                <a href="#solution" class="hover:text-white transition-colors">Solution</a>
+                <a href="#vision" class="hover:text-white transition-colors">Vision</a>
+                <a href="#ai-analyst" class="hover:text-white transition-colors flex items-center gap-1"><i data-lucide="sparkles" class="w-3 h-3 text-purple-400"></i> AI Analyst</a>
+                <a href="#blog" class="hover:text-white transition-colors">Blog</a>
+            </div>
+            <a href="https://www.voltaback.com/subscribe" target="_blank" class="px-5 py-2 rounded-full bg-white text-black text-xs font-semibold hover:bg-gray-200 transition-colors">
+                Réserver une démo
+            </a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden">
+        <div class="absolute inset-0 grid-bg z-0 pointer-events-none"></div>
+        
+        <!-- Animated Blob -->
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-green-500 rounded-full blur-[150px] opacity-10 animate-pulse"></div>
+
+        <div class="relative z-10 text-center max-w-5xl mx-auto px-6">
+            <div class="inline-block mb-6 px-4 py-1 rounded-full border border-gray-800 bg-gray-900/50 backdrop-blur-sm text-xs font-medium text-gray-400 tracking-wide uppercase">
+                Nouvelle Génération de Recharge
+            </div>
+            <h1 class="hero-title text-5xl md:text-8xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-500">
+                L'énergie de votre flotte.<br>Libérée.
+            </h1>
+            <p class="text-xl md:text-2xl text-gray-400 max-w-2xl mx-auto mb-12 font-light leading-relaxed">
+                Le remboursement des recharges à domicile. <br>
+                <span class="text-white font-medium">Sans borne. Sans câble. Juste du code.</span>
+            </p>
+            
+            <div class="flex flex-col sm:flex-row gap-6 justify-center items-center">
+                <a href="https://www.voltaback.com/subscribe" class="cta-button px-8 py-4 rounded-full text-base font-semibold inline-flex items-center justify-center">
+                    Découvrir la solution
+                </a>
+                <a href="#how" class="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm font-medium group">
+                    Voir comment ça marche
+                    <i data-lucide="chevron-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+                </a>
+            </div>
+
+            <!-- Dashboard Preview Mockup -->
+            <div class="mt-20 relative mx-auto max-w-4xl opacity-0 translate-y-10" id="hero-image">
+                <div class="rounded-t-2xl border border-gray-800 bg-[#0a0a0a] p-2 shadow-2xl overflow-hidden">
+                    <div class="flex gap-2 mb-4 px-2 pt-2">
+                        <div class="w-3 h-3 rounded-full bg-red-500/50"></div>
+                        <div class="w-3 h-3 rounded-full bg-yellow-500/50"></div>
+                        <div class="w-3 h-3 rounded-full bg-green-500/50"></div>
+                    </div>
+                    
+                    <!-- NEW VISUAL UI -->
+                    <div class="relative bg-gray-950 rounded-lg aspect-[16/9] overflow-hidden border border-gray-800 flex flex-col group">
+                        <!-- Grid Background -->
+                        <div class="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none"></div>
+                        
+                        <!-- Ambient Glow -->
+                        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-green-500/10 rounded-full blur-[100px] pointer-events-none"></div>
+
+                        <!-- Header / Navbar Mockup -->
+                        <div class="relative z-10 flex justify-between items-center p-6 border-b border-white/5 bg-gray-900/20 backdrop-blur-sm">
+                            <div class="flex gap-4 items-center">
+                                <div class="h-2 w-24 bg-gray-800 rounded-full"></div>
+                                <div class="h-2 w-16 bg-gray-800/50 rounded-full"></div>
+                            </div>
+                            <div class="flex gap-3 items-center">
+                                <div class="px-2 py-1 rounded bg-gray-800 border border-gray-700 text-[10px] text-gray-400 font-mono">V 3.2.0</div>
+                                <div class="h-6 w-6 rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center">
+                                    <div class="h-1.5 w-1.5 bg-green-500 rounded-full animate-pulse"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Main Content -->
+                        <div class="relative z-10 flex-1 flex flex-col items-center justify-center p-8">
+                            <!-- Central Number with Glow -->
+                            <div class="relative mb-12 text-center">
+                                <div class="text-7xl md:text-8xl font-bold text-white tracking-tighter relative z-10 drop-shadow-2xl">
+                                    142.50<span class="text-3xl text-gray-500 align-top mt-4 inline-block font-light">€</span>
+                                </div>
+                                <!-- Glow behind text -->
+                                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-green-500/20 blur-3xl -z-10 opacity-30"></div>
+                                
+                                <div class="mt-4">
+                                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-900/30 border border-green-500/30 text-green-400 text-xs font-bold uppercase tracking-wider shadow-[0_0_15px_rgba(74,222,128,0.2)]">
+                                        <i data-lucide="arrow-up-right" class="w-3 h-3"></i> +12% vs M-1
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Mock Graph / Visuals -->
+                            <div class="w-full max-w-lg h-16 flex items-end justify-between gap-1.5 px-8 opacity-70">
+                                 <!-- Generate bars -->
+                                 <div class="flex-1 bg-gray-800 rounded-t-sm h-[30%] bar-anim" style="animation-delay: 0.1s"></div>
+                                 <div class="flex-1 bg-gray-800 rounded-t-sm h-[45%] bar-anim" style="animation-delay: 0.2s"></div>
+                                 <div class="flex-1 bg-gray-800 rounded-t-sm h-[25%] bar-anim" style="animation-delay: 0.3s"></div>
+                                 <div class="flex-1 bg-gray-800 rounded-t-sm h-[60%] bar-anim" style="animation-delay: 0.4s"></div>
+                                 <div class="flex-1 bg-green-900/50 border-t border-green-500/50 rounded-t-sm h-[50%] bar-anim" style="animation-delay: 0.5s"></div>
+                                 <div class="flex-1 bg-gray-800 rounded-t-sm h-[35%] bar-anim" style="animation-delay: 0.6s"></div>
+                                 <div class="flex-1 bg-green-500 rounded-t-sm h-[85%] bar-anim shadow-[0_0_15px_rgba(34,197,94,0.6)]" style="animation-delay: 0.7s"></div>
+                                 <div class="flex-1 bg-gray-800 rounded-t-sm h-[40%] bar-anim" style="animation-delay: 0.8s"></div>
+                                 <div class="flex-1 bg-gray-800 rounded-t-sm h-[55%] bar-anim" style="animation-delay: 0.9s"></div>
+                                 <div class="flex-1 bg-gray-800 rounded-t-sm h-[30%] bar-anim" style="animation-delay: 1.0s"></div>
+                            </div>
+                            
+                            <!-- Floating Detail Cards (Glassmorphism) -->
+                            <div class="absolute bottom-6 left-6 hidden md:flex bg-gray-900/60 backdrop-blur-md border border-gray-700/50 p-3 rounded-xl items-center gap-3 shadow-2xl transform transition-transform hover:scale-105 cursor-default group/card">
+                                 <div class="p-2 bg-blue-500/10 border border-blue-500/20 rounded-lg text-blue-400 group-hover/card:bg-blue-500/20 transition-colors"><i data-lucide="zap" class="w-4 h-4"></i></div>
+                                 <div>
+                                    <div class="text-[10px] text-gray-400 uppercase tracking-wide">Dernière session</div>
+                                    <div class="text-sm font-bold text-white">24.5 kWh</div>
+                                 </div>
+                            </div>
+
+                            <div class="absolute bottom-6 right-6 hidden md:flex bg-gray-900/60 backdrop-blur-md border border-gray-700/50 p-3 rounded-xl items-center gap-3 shadow-2xl transform transition-transform hover:scale-105 cursor-default group/card">
+                                 <div class="p-2 bg-purple-500/10 border border-purple-500/20 rounded-lg text-purple-400 group-hover/card:bg-purple-500/20 transition-colors"><i data-lucide="moon" class="w-4 h-4"></i></div>
+                                 <div>
+                                    <div class="text-[10px] text-gray-400 uppercase tracking-wide">Heures Creuses</div>
+                                    <div class="text-sm font-bold text-white">82%</div>
+                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Philosophy Section -->
+    <section class="py-32 bg-zinc-950" id="vision">
+        <div class="max-w-4xl mx-auto px-6 text-center">
+            <h2 class="text-3xl md:text-5xl font-bold mb-12 leading-tight">
+                L'ancien monde installait des bornes.<br>
+                <span class="text-gray-600">Nous installons de l'intelligence.</span>
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-12 text-left">
+                <div class="space-y-4">
+                    <div class="w-12 h-12 rounded-full bg-gray-900 flex items-center justify-center border border-gray-800">
+                        <i data-lucide="cpu" class="text-white w-6 h-6"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-white">100% Logiciel</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">
+                        Aucun électricien. Aucun mur percé. Nous nous connectons directement aux APIs des véhicules et des compteurs intelligents.
+                    </p>
+                </div>
+                <div class="space-y-4">
+                    <div class="w-12 h-12 rounded-full bg-gray-900 flex items-center justify-center border border-gray-800">
+                        <i data-lucide="crosshair" class="text-white w-6 h-6"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-white">Précision Atomique</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">
+                        Nous calculons le coût réel au centime près, en distinguant les heures pleines des heures creuses, pour chaque session.
+                    </p>
+                </div>
+                <div class="space-y-4">
+                    <div class="w-12 h-12 rounded-full bg-gray-900 flex items-center justify-center border border-gray-800">
+                        <i data-lucide="leaf" class="text-white w-6 h-6"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-white">Transition Fluide</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">
+                        Une solution invisible qui valorise les données existantes pour accélérer l'électrification de votre flotte.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Bento Grid Section -->
+    <section class="py-32 px-6" id="solution">
+        <div class="max-w-7xl mx-auto">
+            <div class="mb-16">
+                <h2 class="text-5xl font-bold mb-6">Tout est connecté.</h2>
+                <p class="text-xl text-gray-500 max-w-2xl">Une suite d'outils puissante pour le Fleet Manager, une transparence totale pour le conducteur.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 h-auto md:h-[600px]">
+                
+                <!-- Large Card Left (UPDATED VISUAL FOR LEFT -> CENTER <- RIGHT) -->
+                <div class="bento-card md:col-span-2 md:row-span-2 rounded-3xl p-10 flex flex-col justify-between group">
+                    <div>
+                        <div class="flex items-center gap-3 mb-4">
+                             <span class="px-3 py-1 rounded-full bg-green-500/10 text-green-400 text-xs font-bold uppercase tracking-wider">Cœur du système</span>
+                        </div>
+                        <h3 class="text-3xl font-bold text-white mb-2">Synchronisation Linky + Véhicule</h3>
+                        <p class="text-gray-400 max-w-md">Notre algorithme croise la consommation précise de la voiture avec les données de facturation du domicile en temps réel.</p>
+                    </div>
+                    
+                    <div class="mt-10 relative h-64 w-full bg-gray-900/50 rounded-xl border border-gray-800 overflow-hidden flex flex-col items-center justify-center group-hover:border-gray-700 transition-colors">
+                        <!-- Background Grid Effect -->
+                        <div class="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:20px_20px] [mask-image:radial-gradient(ellipse_at_center,black_40%,transparent_80%)]"></div>
+
+                        <div class="relative z-10 flex items-center justify-between px-8 w-full max-w-xl">
+                            
+                            <!-- LEFT NODE: CAR -->
+                            <div class="flex flex-col items-center gap-3 relative z-10">
+                                <div class="w-16 h-16 rounded-2xl bg-black border border-gray-700 flex items-center justify-center shadow-lg group-hover:border-white/20 transition-colors">
+                                    <i data-lucide="car" class="w-8 h-8 text-white"></i>
+                                </div>
+                                <span class="text-[10px] font-mono text-gray-500 uppercase tracking-widest">Tesla Model 3</span>
+                            </div>
+
+                            <!-- LEFT CONNECTION LINE -->
+                            <div class="flex-1 h-[2px] bg-gray-800 relative mx-4 self-center -mt-6">
+                                <!-- Animated Green Line -->
+                                <div class="absolute top-0 left-0 h-full bg-gradient-to-r from-green-500/50 to-green-500 anim-line-left origin-left"></div>
+                                <!-- Success Badge -->
+                                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 anim-check-left pointer-events-none">
+                                    <div class="bg-green-500 text-black text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1 shadow-[0_0_10px_rgba(34,197,94,0.5)] whitespace-nowrap">
+                                        <i data-lucide="check" class="w-3 h-3 stroke-[3px]"></i> API OK
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- CENTER NODE: VOLTABACK -->
+                            <div class="flex flex-col items-center gap-3 relative z-20 -mt-2">
+                                <div class="w-20 h-20 rounded-full bg-black border-2 border-gray-700 flex items-center justify-center anim-center-pulse">
+                                    <i data-lucide="zap" class="w-10 h-10 text-white fill-current"></i>
+                                </div>
+                                <span class="text-xs font-bold text-white tracking-widest">VOLTABACK</span>
+                            </div>
+
+                            <!-- RIGHT CONNECTION LINE -->
+                            <div class="flex-1 h-[2px] bg-gray-800 relative mx-4 self-center -mt-6">
+                                <!-- Animated Yellow Line (Origin Right) -->
+                                <div class="absolute top-0 right-0 h-full bg-gradient-to-l from-yellow-500/50 to-yellow-500 anim-line-right origin-right"></div>
+                                <!-- Success Badge -->
+                                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 anim-check-right pointer-events-none">
+                                    <div class="bg-yellow-500 text-black text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1 shadow-[0_0_10px_rgba(234,179,8,0.5)] whitespace-nowrap">
+                                        <i data-lucide="check" class="w-3 h-3 stroke-[3px]"></i> LINKY OK
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- RIGHT NODE: LINKY -->
+                            <div class="flex flex-col items-center gap-3 relative z-10">
+                                <div class="w-16 h-16 rounded-2xl bg-black border border-gray-700 flex items-center justify-center shadow-lg group-hover:border-white/20 transition-colors">
+                                    <i data-lucide="zap" class="w-8 h-8 text-yellow-400 fill-current"></i>
+                                </div>
+                                <span class="text-[10px] font-mono text-gray-500 uppercase tracking-widest">Enedis Linky</span>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Small Card Top Right -->
+                <div class="bento-card rounded-3xl p-8 flex flex-col justify-center">
+                    <i data-lucide="shield-check" class="w-10 h-10 text-white mb-6"></i>
+                    <h3 class="text-xl font-bold text-white mb-2">Conforme URSSAF</h3>
+                    <p class="text-gray-400 text-sm">Génération automatique de justificatifs infalsifiables. Fini le risque fiscal.</p>
+                </div>
+
+                <!-- Small Card Bottom Right -->
+                <div class="bento-card rounded-3xl p-8 flex flex-col justify-center">
+                    <i data-lucide="smartphone" class="w-10 h-10 text-white mb-6"></i>
+                    <h3 class="text-xl font-bold text-white mb-2">Expérience Driver</h3>
+                    <p class="text-gray-400 text-sm">Zéro saisie manuelle. Remboursement direct sur fiche de paie ou virement.</p>
+                </div>
+
+            </div>
+            
+            <!-- Additional Feature Row -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                <div class="bento-card rounded-3xl p-8 flex items-center gap-6">
+                    <div class="bg-gray-800 p-4 rounded-full">
+                         <i data-lucide="trending-down" class="w-6 h-6 text-green-400"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-white">-30% TCO</h3>
+                        <p class="text-gray-400 text-sm">Réduisez le coût total de détention en favorisant la recharge domestique.</p>
+                    </div>
+                </div>
+                 <div class="bento-card rounded-3xl p-8 flex items-center gap-6">
+                    <div class="bg-gray-800 p-4 rounded-full">
+                         <i data-lucide="zap" class="w-6 h-6 text-yellow-400"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-white">Compatible Toutes Marques</h3>
+                        <p class="text-gray-400 text-sm">Tesla, Renault, Peugeot, Audi... Nous parlons tous les langages.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- NEW SECTION: Gemini Powered Feature -->
+    <section class="py-32 relative bg-[#050505] border-t border-gray-900" id="ai-analyst">
+        <div class="absolute top-0 right-0 w-1/3 h-1/3 bg-purple-900/10 blur-[100px] pointer-events-none"></div>
+        <div class="absolute bottom-0 left-0 w-1/3 h-1/3 bg-blue-900/10 blur-[100px] pointer-events-none"></div>
+
+        <div class="max-w-5xl mx-auto px-6 relative z-10">
+            <div class="flex flex-col md:flex-row gap-12 items-start">
+                <!-- Left Side: Input -->
+                <div class="w-full md:w-1/2">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-300 text-xs font-bold uppercase tracking-wider mb-6">
+                        <i data-lucide="sparkles" class="w-3 h-3"></i> Powered by Gemini AI
+                    </div>
+                    <h2 class="text-4xl font-bold text-white mb-6">VoltaBack AI Analyst.</h2>
+                    <p class="text-gray-400 mb-8 leading-relaxed">
+                        Décrivez votre flotte actuelle (nombre de véhicules, kilométrage moyen, modèles, contraintes...). Notre IA analysera instantanément votre potentiel d'économies et votre stratégie de déploiement.
+                    </p>
+                    
+                    <div class="space-y-4">
+                        <label for="fleet-input" class="sr-only">Description de la flotte</label>
+                        <textarea id="fleet-input" rows="5" class="ai-input w-full rounded-2xl p-6 text-sm" placeholder="Ex: J'ai une flotte de 30 commerciaux qui roulent 25 000 km/an. Ils ont des Tesla Model 3 et vivent principalement en appartement sans borne. Je cherche à réduire mes coûts de recharge publique."></textarea>
+                        <button onclick="analyzeFleet()" id="analyze-btn" class="w-full py-4 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 text-white font-bold hover:shadow-[0_0_30px_rgba(124,58,237,0.5)] transition-all flex items-center justify-center gap-2 group">
+                            <span>Générer l'analyse stratégique</span>
+                            <i data-lucide="sparkles" class="w-4 h-4 group-hover:rotate-12 transition-transform"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Right Side: Output -->
+                <div class="w-full md:w-1/2">
+                    <div id="result-card" class="bento-card min-h-[400px] rounded-3xl p-8 border border-gray-800 bg-[#0a0a0a] relative">
+                        <!-- Placeholder State -->
+                        <div id="result-placeholder" class="absolute inset-0 flex flex-col items-center justify-center text-center p-8 opacity-50">
+                            <i data-lucide="bot" class="w-12 h-12 text-gray-600 mb-4"></i>
+                            <p class="text-sm text-gray-500">L'analyse s'affichera ici.<br>En attente de vos données...</p>
+                        </div>
+
+                        <!-- Loading State -->
+                        <div id="result-loading" class="hidden absolute inset-0 flex flex-col items-center justify-center bg-[#0a0a0a] z-20">
+                            <div class="w-16 h-16 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin mb-4"></div>
+                            <p class="text-purple-400 text-sm animate-pulse">L'IA analyse votre flotte...</p>
+                        </div>
+
+                        <!-- Content State -->
+                        <div id="result-content" class="hidden relative z-10 ai-result">
+                            <!-- Content injected by JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Social Proof / Metrics -->
+    <section class="py-20 border-t border-gray-900 bg-black">
+        <div class="max-w-7xl mx-auto px-6 text-center">
+            <p class="text-sm font-medium text-gray-500 uppercase tracking-widest mb-12">Ils ont rejoint la révolution</p>
+            
+            <div class="flex flex-wrap justify-center gap-12 md:gap-24 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
+                <!-- Placeholder Logos -->
+                <div class="text-xl font-bold text-white flex items-center gap-2"><i data-lucide="hexagon" class="fill-white"></i> ENEDIS</div>
+                <div class="text-xl font-bold text-white flex items-center gap-2"><i data-lucide="triangle" class="fill-white"></i> RENAULT GROUP</div>
+                <div class="text-xl font-bold text-white flex items-center gap-2"><i data-lucide="circle" class="fill-white"></i> VINCI</div>
+                <div class="text-xl font-bold text-white flex items-center gap-2"><i data-lucide="square" class="fill-white"></i> TOTAL ENERGIES</div>
+            </div>
+
+            <div class="mt-24 grid grid-cols-2 md:grid-cols-4 gap-8">
+                <div>
+                    <div class="text-4xl font-bold text-white mb-2">250k€</div>
+                    <div class="text-xs text-gray-500 uppercase tracking-wide">ARR Signé</div>
+                </div>
+                <div>
+                    <div class="text-4xl font-bold text-white mb-2">20+</div>
+                    <div class="text-xs text-gray-500 uppercase tracking-wide">Entreprises Clientes</div>
+                </div>
+                <div>
+                    <div class="text-4xl font-bold text-white mb-2">100%</div>
+                    <div class="text-xs text-gray-500 uppercase tracking-wide">Automatisé</div>
+                </div>
+                 <div>
+                    <div class="text-4xl font-bold text-white mb-2">2M€</div>
+                    <div class="text-xs text-gray-500 uppercase tracking-wide">Levés</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-32 relative overflow-hidden">
+        <!-- Glow background -->
+        <div class="absolute inset-0 bg-gradient-to-t from-green-900/20 to-black pointer-events-none"></div>
+        
+        <div class="relative z-10 max-w-4xl mx-auto px-6 text-center">
+            <h2 class="text-5xl md:text-7xl font-bold text-white mb-8 tracking-tighter">Prêt à passer à la vitesse supérieure ?</h2>
+            <p class="text-xl text-gray-400 mb-10 max-w-2xl mx-auto">
+                Rejoignez les gestionnaires de flotte qui ont choisi la simplicité et l'efficacité. Sans engagement matériel.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="https://www.voltaback.com/subscribe" class="px-10 py-5 rounded-full bg-white text-black font-bold text-lg hover:scale-105 transition-transform">
+                    Planifier une démo
+                </a>
+                <a href="https://www.voltaback.com/subscribe" class="px-10 py-5 rounded-full bg-black border border-gray-700 text-white font-medium text-lg hover:bg-gray-900 transition-colors">
+                    Nous contacter
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-black py-12 border-t border-gray-900 text-sm">
+        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="flex items-center gap-2">
+                 <i data-lucide="zap" class="w-4 h-4 text-green-500"></i>
+                 <span class="font-bold text-white tracking-widest">VOLTABACK</span>
+            </div>
+            <div class="text-gray-500">
+                &copy; 2026 VoltaBack SAS. Tous droits réservés. Levallois-Perret.
+            </div>
+            <div class="flex gap-6">
+                <a href="#" class="text-gray-500 hover:text-white transition-colors">Mentions Légales</a>
+                <a href="#" class="text-gray-500 hover:text-white transition-colors">Confidentialité</a>
+                <a href="#" class="text-gray-500 hover:text-white transition-colors">LinkedIn</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // Mouse tracking for bento card glow effect
+        document.querySelectorAll('.bento-card').forEach(card => {
+            card.onmousemove = e => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                card.style.setProperty('--mouse-x', `${x}px`);
+                card.style.setProperty('--mouse-y', `${y}px`);
+            };
+        });
+
+        // Simple Animation on Load
+        gsap.to("#hero-image", {
+            opacity: 1,
+            y: 0,
+            duration: 1.5,
+            ease: "power3.out",
+            delay: 0.5
+        });
+
+        gsap.from(".hero-title", {
+            y: 50,
+            opacity: 0,
+            duration: 1.2,
+            ease: "power4.out"
+        });
+
+        // --- GEMINI AI LOGIC ---
+        
+        async function analyzeFleet() {
+            const input = document.getElementById('fleet-input').value;
+            if (!input.trim()) return;
+
+            // UI States
+            const btn = document.getElementById('analyze-btn');
+            const placeholder = document.getElementById('result-placeholder');
+            const loading = document.getElementById('result-loading');
+            const content = document.getElementById('result-content');
+
+            btn.disabled = true;
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+            placeholder.classList.add('hidden');
+            loading.classList.remove('hidden');
+            content.classList.add('hidden');
+
+            const apiKey = ""; // API Key provided by environment
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+
+            const systemPrompt = "Tu es un consultant expert en gestion de flotte et transition énergétique (Fleet Manager). L'utilisateur va décrire sa flotte actuelle. Tu dois analyser la situation et expliquer pourquoi une solution logicielle de remboursement de recharge à domicile (comme VoltaBack) est supérieure à l'installation de bornes physiques ou à l'usage exclusif de cartes publiques. Réponds en Markdown. Structure la réponse avec ces titres précis : '### Analyse', '### Potentiel d'Économie', '### Recommandation'. Sois concis, impactant et professionnel (style 'Apple Business').";
+
+            const userPrompt = `Voici ma situation de flotte : ${input}`;
+
+            const payload = {
+                contents: [{
+                    parts: [{ text: userPrompt }]
+                }],
+                systemInstruction: {
+                    parts: [{ text: systemPrompt }]
+                }
+            };
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+                
+                if (data.error) throw new Error(data.error.message);
+
+                const aiText = data.candidates[0].content.parts[0].text;
+                
+                // Convert Markdown to HTML
+                content.innerHTML = marked.parse(aiText);
+                
+                // Show result
+                loading.classList.add('hidden');
+                content.classList.remove('hidden');
+
+            } catch (error) {
+                console.error("Gemini Error:", error);
+                content.innerHTML = `<p class="text-red-400">Une erreur est survenue lors de l'analyse. Veuillez réessayer.</p>`;
+                loading.classList.add('hidden');
+                content.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+    </script>
+</body>
+</html>
