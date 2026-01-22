@@ -660,9 +660,57 @@
 
         // --- GEMINI AI LOGIC ---
         
+        // Check for API key in URL query parameter on page load
+        function initializeApiKeyFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const keyFromUrl = urlParams.get('key');
+            
+            if (keyFromUrl && keyFromUrl.trim() !== '') {
+                // Save to localStorage
+                localStorage.setItem('gemini_api_key', keyFromUrl.trim());
+                
+                // Clean the URL by removing the key parameter
+                urlParams.delete('key');
+                const newUrl = window.location.pathname + 
+                    (urlParams.toString() ? '?' + urlParams.toString() : '') + 
+                    window.location.hash;
+                
+                // Update URL without reloading the page
+                window.history.replaceState({}, '', newUrl);
+            }
+        }
+        
+        // Function to get API key: checks localStorage first, then prompts user
+        function getApiKey() {
+            let apiKey = localStorage.getItem('gemini_api_key');
+            
+            if (!apiKey || apiKey.trim() === '') {
+                apiKey = prompt('Veuillez entrer votre clé API Google Gemini:');
+                
+                if (apiKey && apiKey.trim() !== '') {
+                    localStorage.setItem('gemini_api_key', apiKey.trim());
+                    return apiKey.trim();
+                } else {
+                    return null;
+                }
+            }
+            
+            return apiKey;
+        }
+        
+        // Initialize API key from URL on page load
+        initializeApiKeyFromUrl();
+        
         async function analyzeFleet() {
             const input = document.getElementById('fleet-input').value;
             if (!input.trim()) return;
+
+            // Get API key from localStorage or prompt user
+            const apiKey = getApiKey();
+            if (!apiKey) {
+                alert('Une clé API est requise pour utiliser cette fonctionnalité.');
+                return;
+            }
 
             // UI States
             const btn = document.getElementById('analyze-btn');
@@ -676,8 +724,7 @@
             loading.classList.remove('hidden');
             content.classList.add('hidden');
 
-            const apiKey = ""; // API Key provided by environment
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
             const systemPrompt = "Tu es un consultant expert en gestion de flotte et transition énergétique (Fleet Manager). L'utilisateur va décrire sa flotte actuelle. Tu dois analyser la situation et expliquer pourquoi une solution logicielle de remboursement de recharge à domicile (comme VoltaBack) est supérieure à l'installation de bornes physiques ou à l'usage exclusif de cartes publiques. Réponds en Markdown. Structure la réponse avec ces titres précis : '### Analyse', '### Potentiel d'Économie', '### Recommandation'. Sois concis, impactant et professionnel (style 'Apple Business').";
 
